@@ -7,25 +7,17 @@ const {
 let person = require('../../server.js');
 
 const getMiddleware = (req , res , next) =>{
-    let resObj = {
-        status: StatusCodes.OK,
-        message: "Data successfully retrieved",
-        data: person,
+    if(typeof person == 'undefined'){
+        let resObj = {
+            status: StatusCodes.NOT_FOUND,
+            message: "Data Not Found",
+        }
+        res.send(resObj);
     }
-    res.send(resObj);
+    next();
 }
 
 const postMiddleware = (req , res , next) =>{
-    if(Object.keys(person).length != 0){
-        let resObj = {
-            status: StatusCodes.BAD_REQUEST,
-            message: "Data already present.",
-            data: {},
-        }
-        res.send(resObj);
-        next();
-        return;
-    }
     const schema = Joi.object().keys({
         name:Joi.string().required(),
         age:Joi.number().required(),
@@ -39,33 +31,22 @@ const postMiddleware = (req , res , next) =>{
             data: {},
         }
         res.send(resObj);
-        next();
     }
-    else{
-        person.name = req.body.name;
-        person.age = req.body.age;
-        person.address = req.body.address;
+    if(Object.keys(person).length != 0){
         let resObj = {
-            status: StatusCodes.CREATED,
-            message: ReasonPhrases.CREATED,
-            data: person,
+            status: StatusCodes.BAD_REQUEST,
+            message: "Data already present.",
+            data: {},
         }
         res.send(resObj);
+    }
+    else{
+        req.isPossible = true;
         next();
     }
 }
 
 const putMiddleware = (req , res , next) =>{
-    if(Object.keys(person).length == 0){
-        let resObj = {
-            status: StatusCodes.BAD_REQUEST,
-            message: "Bad request : No data to update.",
-            data: {},
-        }
-        res.send(resObj);
-        next();
-        return;
-    }
     const schema = Joi.object().keys({
         name:Joi.string().required(),
         age:Joi.number().required(),
@@ -79,35 +60,22 @@ const putMiddleware = (req , res , next) =>{
             data: {},
         }
         res.send(resObj);
-        next();
     }
-    else{
-        reqObj = req.body;
-        for(let key of Object.keys(reqObj)){
-            console.log(key);
-            person[key] = reqObj[key];
-        }
+    if(Object.keys(person).length == 0){
         let resObj = {
-            status: StatusCodes.OK,
-            message: "Data updated successfully : PATCH",
-            data: person,
+            status: StatusCodes.BAD_REQUEST,
+            message: "Bad request : No data to update.",
+            data: {},
         }
         res.send(resObj);
+    }
+    else{
+        req.isPossible = true;
         next();
     }
 }
 
 const patchMiddleware = (req , res , next) =>{
-    if(Object.keys(person).length == 0){
-        let resObj = {
-            status: StatusCodes.BAD_REQUEST,
-            message: "Bad request : No data to update",
-            data: {},
-        }
-        res.send(resObj);
-        next();
-        return;
-    }
     const schema = Joi.object().keys({
         name:Joi.string(),
         age:Joi.number(),
@@ -121,19 +89,17 @@ const patchMiddleware = (req , res , next) =>{
             data: {},
         }
         res.send(resObj);
-        next();
     }
-    else{
-        reqObj = req.body;
-        for(let key of Object.keys(reqObj)){
-            person[key] = reqObj[key];
-        }
+    if(Object.keys(person).length == 0){
         let resObj = {
-            status: StatusCodes.OK,
-            message: "Data updated successfully : PATCH",
-            data: person,
+            status: StatusCodes.BAD_REQUEST,
+            message: "Bad request : No data to update",
+            data: {},
         }
         res.send(resObj);
+    }
+    else{
+        req.isPossible = true;
         next();
     }
 }
@@ -146,15 +112,11 @@ const deleteMiddleware = (req , res , next) =>{
             data: person
         };
         res.send(resObj);
-        return;
     }
-    person = {};
-    let resObj = {
-        status: StatusCodes.OK,
-        message: ReasonPhrases.OK,
-        data: person
-    };
-    res.send(resObj);
+    else{
+        req.isPossible = true;
+        next();
+    }
 }
 
 module.exports = {
